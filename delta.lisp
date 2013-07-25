@@ -13,8 +13,9 @@
               (string= (subseq (car args) 0 2) "-h")
               (string= (subseq (car args) 0 3) "--h"))
       (format t "Usage: delta FILE TEST-SCRIPT
-  Minimize the contents of minimized as much as possible while
-  TEST-SCRIPT continues to exit successfully.~%") (quit))
+ Minimize the contents of FILE as much as possible,
+ such that TEST-SCRIPT continues to exit successfully
+ when passed FILE as its only argument.~%") (quit))
 
     (let ((original (split-sequence #\Newline
                       (with-open-file (in (pop args))

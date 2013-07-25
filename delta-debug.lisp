@@ -29,25 +29,33 @@
 Optional argument VAR-EQL should be a function used to test equality
 between subsets of ORIGINAL for memoization of calls to TEST."
   (minimize- original
-             (lambda (variant)
-               (or (cdr (assoc variant memory :test var-eql))
-                   (cddr (push (cons variant (apply test variant)) memory))))
+             (lambda (arg)
+               (when (or (cdr (assoc arg memory :test var-eql))
+                         (if (funcall test arg)
+                             (prog1 t (push (cons arg t) memory))
+                             (prog1 nil (push (cons arg nil) memory))))
+                 arg))
              2))
 
 (defun minimize- (original test n &aux passed (subsets (split original n)))
   (cond
+    ((= 1 (length original)) original)
     ;; divide and conquer on failing subset
     ((setf passed (some test subsets))
-     (minimize- original f test 2))
+     (minimize- passed test 2))
     ;; recurse with n-1 on failing complement
     ((setf passed (some [test {remove-if {member _ original}}] subsets))
-     (minimize- original f test (1- n)))
+     (minimize- passed test (1- n)))
     ;; increase granularity and try again
-    ((< n (length diff))
-     (minimize- original diff test (min (length diff) (* 2 n))))
+    ((< n (length original))
+     (minimize- original test (min (length original) (* 2 n))))
     ;; otherwise we already have the smallest possible diff
-    (t diff)))
+    (t original)))
 
-(defun split (diff n &aux (i 0) (chunk (/ (length diff) n)))
+(defun first-which (func list)
+  (mapc (lambda (el) (when (funcall func el) (return-from first-which el)))
+        list) nil)
+
+(defun split (obj n &aux (i 0) (chunk (/ (length obj) n)))
   (loop :for j :below n :collect
-     (subseq diff (floor i) (min (floor (incf i chunk)) (length diff)))))
+     (subseq obj (floor i) (min (floor (incf i chunk)) (length obj)))))
