@@ -1,2 +1,4 @@
+delta
+cl-launch-setup.lisp
 *.fasl
 *.lx32fsl
