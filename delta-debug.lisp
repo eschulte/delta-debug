@@ -1,6 +1,6 @@
 ;;; delta-debug.lisp --- implementation of delta debugging in common lisp
 
-;; Copyright (C) Eric Schulte
+;; Copyright (C) Eric Schulte 2013
 
 ;; Licensed under the Gnu Public License Version 3 or later
 
@@ -24,20 +24,24 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (enable-curry-compose-reader-macros))
 
-(defun minimize (original diff test)
-  "Returns minimal subset of DIFF against ORIGINAL which passes TEST.
-DIFF should be a list of atomic changes to ORIGINAL."
-  (minimize- original diff test 2))
+(defun minimize (original test &key (var-eql #'tree-equal) &aux memory)
+  "Returns minimal subset of ORIGINAL which passes TEST.
+Optional argument VAR-EQL should be a function used to test equality
+between subsets of ORIGINAL for memoization of calls to TEST."
+  (minimize- original
+             (lambda (variant)
+               (or (cdr (assoc variant memory :test var-eql))
+                   (cddr (push (cons variant (apply test variant)) memory))))
+             2))
 
-;; Requires that test is memoized.
-(defun minimize- (original diff test n &aux failed (ds (split diff n)))
+(defun minimize- (original test n &aux passed (subsets (split original n)))
   (cond
     ;; divide and conquer on failing subset
-    ((setf failed (some {apply-diff original} ds))
-     (minimize- original failed test 2))
+    ((setf passed (some test subsets))
+     (minimize- original f test 2))
     ;; recurse with n-1 on failing complement
-    ((setf failed (some [{apply-diff original} {remove-if {member _ diff}}] ds))
-     (minimize- original failed test (1- n)))
+    ((setf passed (some [test {remove-if {member _ original}}] subsets))
+     (minimize- original f test (1- n)))
     ;; increase granularity and try again
     ((< n (length diff))
      (minimize- original diff test (min (length diff) (* 2 n))))
@@ -47,9 +51,3 @@ DIFF should be a list of atomic changes to ORIGINAL."
 (defun split (diff n &aux (i 0) (chunk (/ (length diff) n)))
   (loop :for j :below n :collect
      (subseq diff (floor i) (min (floor (incf i chunk)) (length diff)))))
-
-(defun apply-patch (original patch) #| TODO: implement |#)
-
-(defun apply-diff (original diff)
-  (loop :for patch :in diff :do (setf original (apply-patch original patch)))
-  original)
