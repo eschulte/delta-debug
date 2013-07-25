@@ -24,32 +24,32 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (enable-curry-compose-reader-macros))
 
-(defun minimize (original diff test )
-  "Returns minimal subset of DIFF against ORIGINAL which fails TEST.
+(defun minimize (original diff test)
+  "Returns minimal subset of DIFF against ORIGINAL which passes TEST.
 DIFF should be a list of atomic changes to ORIGINAL."
   (minimize- original diff test 2))
 
 ;; Requires that test is memoized.
-(defun minimize- (original diff test n)
-  (block nil
-    (if (atomic diff) (return diff))
-    ;; 2. try complements and recurse with n-1 on failure
-    (mapc (lambda (sub-diff)
-            (when (test (apply-diff original sub-diff))
-              (return (minimize- original sub-diff test (1- n)))))
-          (mapcar {complement diff}
-                  ;; 1. try sub-diffs and divide and conquer on failure
-                  (mapc (lambda (sub-diff)
-                          (when (test (apply-diff original sub-diff))
-                            (return (minimize- original sub-diff test 2))))
-                        (split diff n))))
-    ;; 3. we've learned nothing, increase n and try again
-    (if (= n (length diff))
-        (return diff)
-        (minimize- original diff test (min (length diff) (* 2 n))))))
+(defun minimize- (original diff test n &aux failed (ds (split diff n)))
+  (cond
+    ;; divide and conquer on failing subset
+    ((setf failed (some {apply-diff original} ds))
+     (minimize- original failed test 2))
+    ;; recurse with n-1 on failing complement
+    ((setf failed (some [{apply-diff original} {remove-if {member _ diff}}] ds))
+     (minimize- original failed test (1- n)))
+    ;; increase granularity and try again
+    ((< n (length diff))
+     (minimize- original diff test (min (length diff) (* 2 n))))
+    ;; otherwise we already have the smallest possible diff
+    (t diff)))
 
-(defun apply-patch (original patch))
+(defun split (diff n &aux (i 0) (chunk (/ (length diff) n)))
+  (loop :for j :below n :collect
+     (subseq diff (floor i) (min (floor (incf i chunk)) (length diff)))))
 
-(defun apply-diff (original diff &aux (result (copy-tree original)))
-  (loop :for patch :in diff :do (setf result (apply-patch result patch)))
-  result)
+(defun apply-patch (original patch) #| TODO: implement |#)
+
+(defun apply-diff (original diff)
+  (loop :for patch :in diff :do (setf original (apply-patch original patch)))
+  original)
