@@ -9,5 +9,4 @@
                split-sequence)
   :components
   ((:file "package")
-   (:file "delta-debug" :depends-on ("package"))
-   (:file "delta" :depends-on ("package" "delta-debug"))))
+   (:file "delta-debug" :depends-on ("package"))))
