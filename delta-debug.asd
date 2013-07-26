@@ -3,7 +3,6 @@
   :version "0.0.0"
   :licence "GPL V3"
   :depends-on (alexandria
-               metabang-bind
                curry-compose-reader-macros
                cl-launch
                trivial-shell
