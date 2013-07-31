@@ -1,4 +1,6 @@
 delta
 cl-launch-setup.lisp
+test-file.sh
+test-script.sh
 *.fasl
 *.lx32fsl
