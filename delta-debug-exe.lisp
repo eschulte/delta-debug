@@ -10,6 +10,7 @@
 (defvar out t "Output stream to write results.")
 (defvar verbose nil "Verbose output")
 (defvar keep nil "Keep temporary files")
+(defvar script nil "Test script.")
 
 (defmacro getopts (&rest forms)
   (let ((arg (gensym)))
@@ -52,46 +53,77 @@ After BODY is executed the temporary file is removed."
        (when (and (probe-file ,(car spec)) (not keep))
          (delete-file ,(car spec))))))
 
+(defun file-to-lines (file)
+  (split-sequence #\Newline
+    (with-open-file (in file)
+      (let ((seq (make-string (file-length in))))
+        (read-sequence seq in)
+        seq))))
+
+(defun lines-to-file (lines file)
+  (with-open-file (out file :direction :output)
+    (format out "~{~a~^~%~}~%" lines)))
+
+(defun script-over-lines (lines)
+  (with-temp-file (file)
+    (lines-to-file lines file)
+    (multiple-value-bind (out err errno)
+        (shell-command
+         (if (pathname-directory (pathname script))
+             (format nil "~a ~a" script file)
+             (format nil "./~a ~a" script file)))
+      (declare (ignorable out err))
+      (when verbose
+        (format t ";; ~a ~a -> ~a~%" script file errno))
+      (zerop errno))))
+
+(defun minimize-lines (file)
+  "Minimize the lines of FILE."
+  (minimize (file-to-lines file) #'script-over-lines))
+
+(defun minimize-diffs (patch-file)
+  "Minimize the diffs in PATCH-FILE."
+  (let* ((diff (diff (first (diff::read-patches-from-file patch-file))))
+         (base (file-to-lines (original-pathname diff))))
+    (setf (diff-windows diff)
+          (minimize (diff-windows diff)
+                    (lambda (windows)
+                      (script-over-lines
+                       (car (reduce
+                             (lambda-bind ((seq offset) window)
+                               (multiple-value-call #'list
+                                 (apply-seq-window seq window :offset offset)))
+                             windows :initial-value (list base 0)))))))
+    diff))
+
 (defun main (&optional (args *arguments*))
   (when (or (not args) (< (length args) 2)
             (string= (subseq (car args) 0 2) "-h")
             (string= (subseq (car args) 0 3) "--h"))
-    (format t "Usage: delta TEST-SCRIPT FILE
+    (format t "Usage: delta TEST-SCRIPT FILE [OPTIONS...]
  Minimize the contents of FILE as much as possible,
  such that TEST-SCRIPT continues to exit successfully
- when passed FILE as its only argument.
+ when passed FILE as its only argument.  If FILE has
+ a \".patch\" extension, treat it as a unified diff
+ (e.g., as generated with \"diff -u\").
 
 Options:
  -o,--out FILE ------ write output to FILE
+ -p,--patch --------- force treating FILE as a patch
  -k,--keep ---------- keep temporary files
  -v,--verbose ------- verbose output~%") (quit))
 
-  (let ((script (pop args))
-        (original (split-sequence #\Newline
-                    (with-open-file (in (pop args))
-                      (let ((seq (make-string (file-length in))))
-                        (read-sequence seq in)
-                        seq)))))
+  (setf script (pop args))
+  (let ((in-file (pop args)) (out *standard-output*) patch)
 
     (getopts
      ("-o" "--out"     (setf out (open (pop args) :direction :output)))
-     ("-v" "--verbose" (setf verbose t))
-     ("-k" "--keep"    (setf keep t)))
+     ("-p" "--patch"   (setf patch t))
+     ("-k" "--keep"    (setf keep t))
+     ("-v" "--verbose" (setf verbose t)))
 
-    (format out "~{~a~^~%~}~%"
-            (minimize original
-                      (lambda (contents)
-                        (with-temp-file (file)
-                          (with-open-file (out file :direction :output)
-                            (format out "~{~a~^~%~}~%" contents))
-                          (multiple-value-bind (out err errno)
-                              (shell-command
-                               (if (pathname-directory (pathname script))
-                                   (format nil "~a ~a" script file)
-                                   (format nil "./~a ~a" script file)))
-                            (declare (ignorable out err))
-                            (when verbose
-                              (format t ";; ~a ~a -> ~a~%" script file errno))
-                            (zerop errno))))))
+    (if (or patch (string= (pathname-type (pathname in-file)) "patch"))
+        (render-diff (minimize-diffs in-file) out)
+        (format out "~{~a~^~%~}~%" (minimize-lines in-file)))
 
-    (when (streamp out) (close out))))
+    (when (not (equalp out *standard-output*)) (close out))))
