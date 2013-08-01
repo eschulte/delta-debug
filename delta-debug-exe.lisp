@@ -81,10 +81,9 @@ After BODY is executed the temporary file is removed."
   "Minimize the lines of FILE."
   (minimize (file-to-lines file) #'script-over-lines))
 
-(defun minimize-diffs (patch-file)
+(defun minimize-diffs (diff)
   "Minimize the diffs in PATCH-FILE."
-  (let* ((diff (diff (first (diff::read-patches-from-file patch-file))))
-         (base (file-to-lines (original-pathname diff))))
+  (let ((base (file-to-lines (original-pathname diff))))
     (setf (diff-windows diff)
           (minimize (diff-windows diff)
                     (lambda (windows)
@@ -123,7 +122,11 @@ Options:
      ("-v" "--verbose" (setf verbose t)))
 
     (if (or patch (string= (pathname-type (pathname in-file)) "patch"))
-        (render-diff (minimize-diffs in-file) out)
+        (let ((patches (diff::read-patches-from-file in-file)))
+          (unless patches
+            (format *error-output* "file ~s not a recognizable patch~%" in-file)
+            (quit 1))
+          (render-diff (minimize-diffs (diff (first patches))) out))
         (format out "~{~a~^~%~}~%" (minimize-lines in-file)))
 
     (when (not (equalp out *standard-output*)) (close out))))
