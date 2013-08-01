@@ -71,7 +71,8 @@ After BODY is executed the temporary file is removed."
         (shell-command
          (if (pathname-directory (pathname script))
              (format nil "~a ~a" script file)
-             (format nil "./~a ~a" script file)))
+             (format nil "./~a ~a" script file))
+         :input #+ccl "" #+sbcl nil)
       (declare (ignorable out err))
       (when verbose
         (format t ";; ~a ~a -> ~a~%" script file errno))
