@@ -6,18 +6,11 @@
 
 ;;; Commentary
 
-;; Implementation of the TSE delta debugging algorithm.
-
-;; @article{zeller2002simplifying,
-;;   title={Simplifying and isolating failure-inducing input},
-;;   author={Zeller, Andreas and Hildebrandt, Ralf},
-;;   journal={Software Engineering, IEEE Transactions on},
-;;   volume={28},
-;;   number={2},
-;;   pages={183--200},
-;;   year={2002},
-;;   publisher={IEEE}
-;; }
+;; Implementation of the delta debugging algorithm from the following.
+;;
+;;   Zeller, Andreas, and Ralf Hildebrandt. "Simplifying and isolating
+;;   failure-inducing input." Software Engineering, IEEE Transactions
+;;   on 28.2 (2002): 183-200.
 
 ;;; Code:
 (in-package :delta-debug)
