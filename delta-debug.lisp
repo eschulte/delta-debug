@@ -1,6 +1,6 @@
 ;;; delta-debug.lisp --- implementation of delta debugging in common lisp
 
-;; Copyright (C) Eric Schulte 2013
+;; Copyright (C) 2013 Eric Schulte
 
 ;; Licensed under the Gnu Public License Version 3 or later
 
