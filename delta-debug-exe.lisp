@@ -96,11 +96,12 @@ After BODY is executed the temporary file is removed."
                              windows :initial-value (list base 0)))))))
     diff))
 
-(defun main (&optional (args *arguments*))
-  (when (or (not args) (< (length args) 2)
-            (string= (subseq (car args) 0 2) "-h")
-            (string= (subseq (car args) 0 3) "--h"))
-    (format t "Usage: delta TEST-SCRIPT FILE [OPTIONS...]
+(defun main (args)
+  (let ((self (pop args)))
+    (when (or (not args) (< (length args) 2)
+              (string= (subseq (car args) 0 2) "-h")
+              (string= (subseq (car args) 0 3) "--h"))
+      (format t "Usage: ~a TEST-SCRIPT FILE [OPTIONS...]
  Minimize the contents of FILE as much as possible,
  such that TEST-SCRIPT continues to exit successfully
  when passed FILE as its only argument.  If FILE has
@@ -111,16 +112,16 @@ Options:
  -o,--out FILE ------ write output to FILE
  -p,--patch --------- force treating FILE as a patch
  -k,--keep ---------- keep temporary files
- -v,--verbose ------- verbose output~%") (quit))
+ -v,--verbose ------- verbose output~%" self) (quit)))
 
   (setf script (pop args))
   (let ((in-file (pop args)) (out *standard-output*) patch)
 
     (getopts
-     ("-o" "--out"     (setf out (open (pop args) :direction :output)))
-     ("-p" "--patch"   (setf patch t))
-     ("-k" "--keep"    (setf keep t))
-     ("-v" "--verbose" (setf verbose t)))
+      ("-o" "--out"     (setf out (open (pop args) :direction :output)))
+      ("-p" "--patch"   (setf patch t))
+      ("-k" "--keep"    (setf keep t))
+      ("-v" "--verbose" (setf verbose t)))
 
     (if (or patch (string= (pathname-type (pathname in-file)) "patch"))
         (let ((patches (diff::read-patches-from-file in-file)))
