@@ -20,6 +20,25 @@
                       `((or (string= ,arg ,short) (string= ,arg ,long)) ,@body))
                     forms)))))
 
+;;; Taken from http://cl-cookbook.sourceforge.net/os.html
+(defun getenv (name &optional default)
+  #+CMU
+  (let ((x (assoc name ext:*environment-list*
+                  :test #'string=)))
+    (if x (cdr x) default))
+  #-CMU
+  (or
+   #+Allegro (sys:getenv name)
+   #+CLISP (ext:getenv name)
+   #+ECL (si:getenv name)
+   #+SBCL (sb-unix::posix-getenv name)
+   #+LISPWORKS (lispworks:environment-variable name)
+   default))
+
+(defun in-path-p (exe)
+  (some (lambda (base) (probe-file (concatenate 'string base "/" exe)))
+        (split-sequence #\: (getenv "PATH"))))
+
 #+sbcl
 (locally (declare (sb-ext:muffle-conditions sb-ext:compiler-note))
   (sb-alien:define-alien-routine (#-win32 "tempnam" #+win32 "_tempnam" tempnam)
@@ -69,7 +88,7 @@ After BODY is executed the temporary file is removed."
     (lines-to-file lines file)
     (multiple-value-bind (out err errno)
         (shell-command
-         (if (pathname-directory (pathname script))
+         (if (in-path-p (car (split-sequence #\Space script)))
              (format nil "~a ~a" script file)
              (format nil "./~a ~a" script file))
          :input #+ccl "" #+sbcl nil)
