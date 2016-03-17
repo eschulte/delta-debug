@@ -2,7 +2,7 @@
   :description "compile a delta-debugging command line executable"
   :version "0.0.0"
   :author "Eric Schulte <schulte.eric@gmail.com>"
-  :licence "GPL V3"
+  :licence "Public Domain"
   :depends-on (alexandria
                metabang-bind
                curry-compose-reader-macros

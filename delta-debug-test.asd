@@ -1,7 +1,7 @@
 (defsystem :delta-debug-test
   :description "test the delta-debug package"
   :version "0.0.0"
-  :licence "GPL V3"
+  :licence "Public Domain"
   :depends-on (alexandria
                curry-compose-reader-macros
                delta-debug
