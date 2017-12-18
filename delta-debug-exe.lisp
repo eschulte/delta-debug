@@ -18,7 +18,8 @@
 ;; OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ;;; Code:
-(in-package :delta-debug-exe)
+(in-package :delta-debug/exe)
+(in-readtable :curry-compose-reader-macros)
 
 (defvar out t "Output stream to write results.")
 (defvar verbose nil "Verbose output")

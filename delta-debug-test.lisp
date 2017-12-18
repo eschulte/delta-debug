@@ -18,9 +18,8 @@
 ;; OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ;;; Code:
-(in-package :delta-debug-test)
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (enable-curry-compose-reader-macros))
+(in-package :delta-debug/test)
+(in-readtable :curry-compose-reader-macros)
 
 (defsuite test)
 (in-suite test)

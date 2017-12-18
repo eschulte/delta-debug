@@ -1,7 +1,8 @@
-(defpackage #:delta-debug-exe
+(defpackage #:delta-debug/exe
   (:use :common-lisp
         :alexandria
         :metabang-bind
+        :named-readtables
         :curry-compose-reader-macros
         :delta-debug
         :diff

@@ -27,8 +27,7 @@
 
 ;;; Code:
 (in-package :delta-debug)
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (enable-curry-compose-reader-macros))
+(in-readtable :curry-compose-reader-macros)
 
 (defun minimize (original test &aux memory)
   "Returns minimal subset of ORIGINAL (a list) which passes TEST."
