@@ -26,6 +26,12 @@
 ;;   on 28.2 (2002): 183-200.
 
 ;;; Code:
+(defpackage #:delta-debug
+  (:use :common-lisp
+        :alexandria
+        :named-readtables
+        :curry-compose-reader-macros)
+  (:export :minimize))
 (in-package :delta-debug)
 (in-readtable :curry-compose-reader-macros)
 

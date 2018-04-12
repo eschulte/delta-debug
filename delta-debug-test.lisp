@@ -18,6 +18,14 @@
 ;; OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ;;; Code:
+(defpackage #:delta-debug/test
+  (:use :common-lisp
+        :alexandria
+        :named-readtables
+        :curry-compose-reader-macros
+        :delta-debug
+        :stefil)
+  (:export :test))
 (in-package :delta-debug/test)
 (in-readtable :curry-compose-reader-macros)
 

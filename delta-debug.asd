@@ -5,8 +5,7 @@
   :licence "Public Domain"
   :depends-on (alexandria named-readtables curry-compose-reader-macros)
   :components
-  ((:file "package")
-   (:file "delta-debug" :depends-on ("package"))))
+  ((:file "delta-debug")))
 
 (defsystem "delta-debug/delta"
   :description "compile a delta-debugging command line executable"
@@ -24,8 +23,7 @@
                trivial-shell
                split-sequence)
   :components
-  ((:file "package-exe")
-   (:file "delta-debug-exe" :depends-on ("package-exe"))))
+  ((:file "delta-debug-exe")))
 
 (defsystem "delta-debug/test"
   :description "test the delta-debug package"
@@ -36,5 +34,4 @@
                delta-debug
                stefil)
   :components
-  ((:file "package-test")
-   (:file "delta-debug-test" :depends-on ("package-test"))))
+  ((:file "delta-debug-test")))
